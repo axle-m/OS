@@ -16,54 +16,56 @@ start:
 
     xor ax, ax
     mov ds, ax
+    mov es, ax
 
     mov si, msg
     call print_string
 
-    ; a20
-
+    ; Enable A20 Line
     in al, 0x92
     or al, 2
     out 0x92, al
 
-    ; enter unreal mode
-
+    ; Enter Unreal Mode
     cli
 
     lgdt [gdt_descriptor]
 
     mov eax, cr0
-    or eax, 1
+    or al, 1
+    mov cr0, eax        ; Enable protected mode (16-bit segment rules still apply)
+
+    ; Load data segment descriptors with 32-bit data selector (0x10) to cache 4GB limit
+    mov bx, 0x10
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
+    mov ss, bx
+
+    ; Switch back to real mode immediately
+    mov eax, cr0
+    and al, 0xFE
     mov cr0, eax
 
-    jmp 0x08:pmode
+    ; Far jump to flush instruction prefetch queue and reload CS
+    jmp 0x0000:.unreal_done
 
-[BITS 32]
-
-pmode:
-        mov ax, 0x10
+.unreal_done:
+    ; Restore DS and ES to real-mode segment (0x0000)
+    ; Segment limit of 4GB remains in cached descriptors
+    xor ax, ax
     mov ds, ax
     mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    mov eax, cr0
-    and eax, 0xFFFFFFFE
-    mov cr0, eax
-
-    jmp 0x0000:rmode
-
-[BITS 16]
-
-rmode:
+    mov ss, ax
 
     sti
 
-; Read kernel into temporary buffer
+; Read kernel into temporary buffer (under 1 MiB)
 
     mov ax, TEMP_SEG
     mov es, ax
-    xor bx, bx
+    xor bx, bx          ; Destination ES:BX = 0x1000:0x0000
 
     mov ah, 0x02
     mov al, KERNEL_SECTORS
@@ -79,33 +81,47 @@ rmode:
 
     cld
 
-    db 0x66
-    mov si, 0          ; ESI = 0
-
-    db 0x66
-    mov di, 0x0000     ; EDI low word
-
-    mov ax, TEMP_SEG
+    xor ax, ax
     mov ds, ax
+    mov es, ax          ; Use flat 0-based segments for unreal copying
 
-    ; destination = 0x00100000
-    ; ES still has 4 GiB limit cached
-
-    db 0x66
-    mov edi, KERNEL_PHYS
-
+    ; Source: 0x00010000 (where TEMP_SEG:0 is)
     db 0x66
     mov esi, 0x00010000
+
+    ; Destination: 0x00100000 (1 MiB)
+    db 0x66
+    mov edi, KERNEL_PHYS
 
     mov cx, (KERNEL_SECTORS * 512) / 4
 
     a32 rep movsd
 
-; Jump to kernel
+; Jump to kernel: transition to 32-bit protected mode first
 
     mov si, success_msg
     call print_string
-    jmp 0xFFFF:0x0010
+
+    cli
+
+    ; Enable protected mode
+    mov eax, cr0
+    or al, 1
+    mov cr0, eax
+
+    ; Set up segment selectors and stack pointer for 32-bit protected mode
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    mov esp, 0x00090000 ; safe stack below 640KB
+
+    ; 32-bit far jump directly to 0x08:0x00100000
+    db 0x66, 0xEA
+    dd 0x00100000
+    dw 0x0008
 
 disk_error:
     mov si, disk_error_msg

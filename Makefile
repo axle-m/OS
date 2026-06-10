@@ -12,19 +12,20 @@ CFLAGS = \
 	-ffreestanding \
 	-fno-stack-protector \
 	-fno-pic \
-	-m64 \
-	-mno-red-zone \
+	-m32 \
 	-nostdlib \
 	-Wall \
 	-Wextra \
 	-c
 
 LDFLAGS = \
+	-m elf_i386 \
 	-T $(SRC_DIR)/kernel/linker.ld
 
 BOOT0_BIN = $(BUILD_DIR)/boot0.bin
 BOOT1_BIN = $(BUILD_DIR)/boot1.bin
 
+ENTRY_OBJ = $(BUILD_DIR)/entry.o
 KERNEL_OBJ = $(BUILD_DIR)/kernel.o
 KERNEL_ELF = $(BUILD_DIR)/kernel.elf
 KERNEL_BIN = $(BUILD_DIR)/kernel.bin
@@ -61,6 +62,12 @@ $(BOOT1_BIN): \
 
 # Kernel compilation
 
+$(ENTRY_OBJ): \
+	$(SRC_DIR)/kernel/entry.asm \
+	| $(BUILD_DIR)
+
+	$(ASM) -f elf32 $< -o $@
+
 $(KERNEL_OBJ): \
 	$(SRC_DIR)/kernel/kernel.c \
 	| $(BUILD_DIR)
@@ -70,10 +77,11 @@ $(KERNEL_OBJ): \
 # Link kernel ELF
 
 $(KERNEL_ELF): \
+	$(ENTRY_OBJ) \
 	$(KERNEL_OBJ) \
 	$(SRC_DIR)/kernel/linker.ld
 
-	$(LD) $(LDFLAGS) -o $@ $(KERNEL_OBJ)
+	$(LD) $(LDFLAGS) -o $@ $(ENTRY_OBJ) $(KERNEL_OBJ)
 
 # Convert ELF -> flat binary
 
