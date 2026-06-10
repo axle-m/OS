@@ -1,6 +1,7 @@
 #include <stdint.h>
 volatile uint16_t* vga_buffer = (uint16_t*)0xB8000;
 int cursor_pos = 0;
+int prompt_limit = 0;
 
 const char scancode_to_ascii[] = {
     0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
@@ -27,7 +28,7 @@ void putchar(char c){
     if(c == '\n'){
         cursor_pos = (cursor_pos / 80 + 1) * 80;
     } else if (c == '\b'){
-        if(cursor_pos > 0){
+        if(cursor_pos > prompt_limit){
             cursor_pos--;
             vga_buffer[cursor_pos] = (0x0F << 8) | ' ';
         }
@@ -47,6 +48,7 @@ void kmain(void)
     clear_screen();
     print("Loaded Kernel\n");
     print("> ");
+    prompt_limit = cursor_pos;
     
     uint8_t last_scancode = 0;
     
