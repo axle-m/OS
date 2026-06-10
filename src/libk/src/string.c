@@ -1,5 +1,5 @@
-#include "include/string.h"
-#include "include/ktypes.h"
+#include "../include/string.h"
+#include "../include/ktypes.h"
 
 size_t strlen(const char *str)
 {
@@ -100,6 +100,7 @@ char *strrchr(const char *s, int c)
     return (char *)last;
 }
 
+// check if haystack contains needle
 char *strstr(const char *haystack, const char *needle)
 {
     if (!*needle)
@@ -123,6 +124,7 @@ char *strstr(const char *haystack, const char *needle)
     return NULL;
 }
 
+// check if s contains any char of reject, return which index of s that char is found first, return length of s if not found?
 size_t strcspn(const char *s, const char *reject)
 {
     size_t i = 0;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stddef.h> // for size_t
+#include "include/ktypes.h"
 
 // returns the size of str in bytes
 size_t strlen(const char *str);

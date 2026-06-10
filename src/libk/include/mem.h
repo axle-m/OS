@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ktypes.h"
 
 // sets n bytes of memory starting at s to byte c
