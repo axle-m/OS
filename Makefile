@@ -48,6 +48,14 @@ LIBK_SRCS := $(shell find $(LIBK_DIR) -name '*.c')
 LIBK_OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(LIBK_SRCS))
 
 # -------------------------------------------------
+# Recursive shell source discovery
+# -------------------------------------------------
+SHELL_DIR := $(SRC_DIR)/shell
+SHELL_SRCS := $(shell find $(SHELL_DIR) -name '*.c')
+SHELL_OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SHELL_SRCS))
+
+
+# -------------------------------------------------
 # Phony targets
 # -------------------------------------------------
 
@@ -118,12 +126,14 @@ $(KERNEL_ELF): \
 	$(ENTRY_OBJ) \
 	$(KERNEL_OBJ) \
 	$(LIBK_OBJS) \
+	$(SHELL_OBJS) \
 	$(SRC_DIR)/kernel/linker.ld
 
 	$(LD) $(LDFLAGS) -o $@ \
 		$(ENTRY_OBJ) \
 		$(KERNEL_OBJ) \
-		$(LIBK_OBJS)
+		$(LIBK_OBJS) \
+		$(SHELL_OBJS)
 
 # -------------------------------------------------
 # ELF → flat binary
