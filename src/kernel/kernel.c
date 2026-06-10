@@ -27,6 +27,8 @@ void clear_screen() {
 void putchar(char c){
     if(c == '\n'){
         cursor_pos = (cursor_pos / 80 + 1) * 80;
+        print("> ");
+        prompt_limit = cursor_pos;
     } else if (c == '\b'){
         if(cursor_pos > prompt_limit){
             cursor_pos--;
@@ -47,8 +49,6 @@ void kmain(void)
 {
     clear_screen();
     print("Loaded Kernel\n");
-    print("> ");
-    prompt_limit = cursor_pos;
     
     uint8_t last_scancode = 0;
     
