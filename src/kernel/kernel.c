@@ -1,4 +1,7 @@
-#include <stdint.h>
+#include "../libk/include/ktypes.h"
+#include "../libk/include/kmalloc.h"
+#include "boot_info.h"
+
 volatile uint16_t *vga_buffer = (uint16_t *)0xB8000;
 int cursor_pos = 0;
 int prompt_limit = 0;
@@ -59,8 +62,21 @@ void print(const char *str)
         putchar(str[i]);
 }
 
-void kmain(void)
+void kmain(boot_info *boot)
 {
+    // set up memory
+    if (boot->magic != BOOT_INFO_MAGIC)
+    {
+        while (1)
+            ;
+    }
+
+    e820_entry *map = boot->memory_map;
+
+    kmalloc_init(
+        boot->heap_start,
+        boot->heap_size);
+
     clear_screen();
     print("Loaded Kernel\n");
 

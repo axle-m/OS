@@ -10,6 +10,21 @@ TEMP_OFF equ 0x0000
 
 KERNEL_PHYS equ 0x00100000
 
+BOOTINFO_ADDR equ 0x00080000
+E820_ADDR     equ 0x00081000
+
+BOOTINFO_MAGIC equ 0xC0FFEE42
+
+BOOTINFO_MAGIC_OFF            equ 0
+BOOTINFO_MEMORY_MAP_OFF       equ 4
+BOOTINFO_MEMORY_MAP_COUNT_OFF equ 8
+BOOTINFO_KERNEL_START_OFF     equ 12
+BOOTINFO_KERNEL_END_OFF       equ 16
+BOOTINFO_HEAP_START_OFF       equ 20
+BOOTINFO_HEAP_SIZE_OFF        equ 24
+
+BOOTINFO_PTR dd 0
+
 start:
 
     mov [BOOT_DRIVE], dl
@@ -61,6 +76,33 @@ start:
 
     sti
 
+
+; load memory and boot info
+    mov ax, 0x8100      ; ES = 0x8100
+    mov es, ax          ; ES:DI = 0x8100:0000 = 0x81000
+    xor di, di
+
+    xor ebx, ebx        ; continuation value
+    xor bp, bp          ; entry count
+
+.e820_loop:
+    mov eax, 0xE820
+    mov edx, 0x534D4150
+    mov ecx, 24
+    int 0x15
+    jc .e820_done
+
+    cmp eax, 0x534D4150
+    jne .e820_done
+
+    add di, 24
+    inc bp
+
+    test ebx, ebx
+    jnz .e820_loop
+
+.e820_done:
+
 ; Read kernel into temporary buffer (under 1 MiB)
 
     mov ax, TEMP_SEG
@@ -97,10 +139,38 @@ start:
 
     a32 rep movsd
 
+; load boot_info struct into memory
+    mov edi, BOOTINFO_ADDR
+
+    ; magic
+    mov dword [edi + BOOTINFO_MAGIC_OFF], BOOTINFO_MAGIC
+
+    ; memory map pointer
+    mov dword [edi + BOOTINFO_MEMORY_MAP_OFF], E820_ADDR
+
+    ; memory map count
+    movzx eax, bp
+    mov dword [edi + BOOTINFO_MEMORY_MAP_COUNT_OFF], eax
+
+    ; kernel physical location
+    mov dword [edi + BOOTINFO_KERNEL_START_OFF], KERNEL_PHYS
+
+    mov eax, KERNEL_PHYS
+    add eax, KERNEL_SECTORS * 512
+    mov dword [edi + BOOTINFO_KERNEL_END_OFF], eax
+
+    ; heap chosen by bootloader
+    mov dword [edi + BOOTINFO_HEAP_START_OFF], 0x00200000
+
+    ; 16 MiB heap
+    mov dword [edi + BOOTINFO_HEAP_SIZE_OFF], 0x01000000
+
 ; Jump to kernel: transition to 32-bit protected mode first
 
     mov si, success_msg
     call print_string
+
+    mov dword [BOOTINFO_PTR], BOOTINFO_ADDR
 
     cli
 
@@ -117,6 +187,8 @@ start:
     mov gs, ax
     mov ss, ax
     mov esp, 0x00090000 ; safe stack below 640KB
+
+    mov eax, BOOTINFO_ADDR
 
     ; 32-bit far jump directly to 0x08:0x00100000
     db 0x66, 0xEA
