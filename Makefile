@@ -1,47 +1,131 @@
 ASM = nasm
-ASM_FLAGS = -f bin -I $(SRC_DIR)/boot/
-
-# C compiler and linker setup
 CC = gcc
-CC_FLAGS = -m32 -ffreestanding -fno-pie -fno-stack-protector -nostdlib -O2 -Wall
 LD = ld
-LD_FLAGS = -m elf_i386 -T linker.ld --oformat binary
+OBJCOPY = objcopy
 
 SRC_DIR = src
 BUILD_DIR = build
-SCRIPT_DIR = scripts
 
-TARGET_BIN = $(BUILD_DIR)/boot.bin
-TARGET_KERNEL = $(BUILD_DIR)/kernel.bin
-TARGET_ISO = $(BUILD_DIR)/os.iso
+ASM_FLAGS = -f bin -I $(SRC_DIR)/boot/
 
-all: iso kernel
+CFLAGS = \
+	-ffreestanding \
+	-fno-stack-protector \
+	-fno-pic \
+	-m32 \
+	-nostdlib \
+	-Wall \
+	-Wextra \
+	-c
 
-.PHONY: all iso bin clean kernel
+LDFLAGS = \
+	-m elf_i386 \
+	-T $(SRC_DIR)/kernel/linker.ld
 
-iso: $(TARGET_ISO)
-bin: $(TARGET_BIN)
-kernel: $(TARGET_KERNEL)
+BOOT0_BIN = $(BUILD_DIR)/boot0.bin
+BOOT1_BIN = $(BUILD_DIR)/boot1.bin
+
+ENTRY_OBJ = $(BUILD_DIR)/entry.o
+KERNEL_OBJ = $(BUILD_DIR)/kernel.o
+KERNEL_ELF = $(BUILD_DIR)/kernel.elf
+KERNEL_BIN = $(BUILD_DIR)/kernel.bin
+
+DISK_IMAGE = $(BUILD_DIR)/os_floppy.img
+ISO_IMAGE = $(BUILD_DIR)/os.iso
+
+.PHONY: all iso clean run
+
+all: iso
+
+iso: $(ISO_IMAGE)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(TARGET_BIN): $(BUILD_DIR) $(SRC_DIR)/boot/boot0.asm $(SRC_DIR)/boot/disk_read.asm $(SRC_DIR)/boot/print.asm
-	$(ASM) $(ASM_FLAGS) -o $(TARGET_BIN) $(SRC_DIR)/boot/boot0.asm
+# bootloader
 
-$(TARGET_KERNEL): $(BUILD_DIR) $(SRC_DIR)/kernel/kernel.c
-	$(CC) $(CC_FLAGS) -c $(SRC_DIR)/kernel/kernel.c -o $(BUILD_DIR)/kernel.o
-	$(LD) $(LD_FLAGS) -o $(TARGET_KERNEL) $(BUILD_DIR)/kernel.o
+$(BOOT0_BIN): \
+	$(SRC_DIR)/boot/boot0.asm \
+	$(SRC_DIR)/boot/disk_read.asm \
+	$(SRC_DIR)/boot/print.asm \
+	| $(BUILD_DIR)
 
-$(TARGET_ISO): $(TARGET_BIN)
+	$(ASM) $(ASM_FLAGS) -o $@ $<
+
+$(BOOT1_BIN): \
+	$(SRC_DIR)/boot/boot1.asm \
+	$(SRC_DIR)/boot/disk_read.asm \
+	$(SRC_DIR)/boot/print.asm \
+	| $(BUILD_DIR)
+
+	$(ASM) $(ASM_FLAGS) -o $@ $<
+
+# Kernel compilation
+
+$(ENTRY_OBJ): \
+	$(SRC_DIR)/kernel/entry.asm \
+	| $(BUILD_DIR)
+
+	$(ASM) -f elf32 $< -o $@
+
+$(KERNEL_OBJ): \
+	$(SRC_DIR)/kernel/kernel.c \
+	| $(BUILD_DIR)
+
+	$(CC) $(CFLAGS) $< -o $@
+
+# Link kernel ELF
+
+$(KERNEL_ELF): \
+	$(ENTRY_OBJ) \
+	$(KERNEL_OBJ) \
+	$(SRC_DIR)/kernel/linker.ld
+
+	$(LD) $(LDFLAGS) -o $@ $(ENTRY_OBJ) $(KERNEL_OBJ)
+
+# Convert ELF -> flat binary
+
+$(KERNEL_BIN): $(KERNEL_ELF)
+
+	$(OBJCOPY) -O binary $< $@
+
+# Build floppy image
+
+$(DISK_IMAGE): \
+	$(BOOT0_BIN) \
+	$(BOOT1_BIN) \
+	$(KERNEL_BIN)
+
+	cat \
+		$(BOOT0_BIN) \
+		$(BOOT1_BIN) \
+		$(KERNEL_BIN) \
+		> $@
+
+	qemu-img resize -f raw $@ 1440k
+
+# Build ISO
+
+$(ISO_IMAGE): $(DISK_IMAGE)
+
 	mkdir -p $(BUILD_DIR)/iso
-	cp $(TARGET_BIN) $(BUILD_DIR)/iso/os_floppy.img
-	qemu-img resize -f raw $(BUILD_DIR)/iso/os_floppy.img 1440k
-	xorriso -as mkisofs -V "OS" -b os_floppy.img -hide os_floppy.img -o $(TARGET_ISO) $(BUILD_DIR)/iso/
+
+	cp $(DISK_IMAGE) \
+	   $(BUILD_DIR)/iso/os_floppy.img
+
+	xorriso -as mkisofs \
+		-V "OS" \
+		-b os_floppy.img \
+		-hide os_floppy.img \
+		-o $@ \
+		$(BUILD_DIR)/iso/
+
+run: $(DISK_IMAGE)
+
+	qemu-system-x86_64 \
+		-drive format=raw,file=$(DISK_IMAGE)
 
 clean:
-	@echo "Cleaning build artifacts..."
-	- rm -rf $(BUILD_DIR)
-	- rm -f boot.bin os.iso
-	@echo "Clean complete."
+	@echo off
+	rm -rf $(BUILD_DIR)
 
