@@ -20,10 +20,12 @@ const char scancode_to_ascii[] = {
 
 void launch_shell() {
     char input_buffer[256];
-    int buffer_len = 0;
+    char *ptr = input_buffer;
     
 
     uint8_t last_scancode = 0;
+
+    print("> ");
 
     for (;;)
     {
@@ -36,15 +38,31 @@ void launch_shell() {
                 if (scancode < sizeof(scancode_to_ascii))
                 {
                     char c = scancode_to_ascii[scancode];
-                    if (c != 0)
-                    {
-                        putchar(c);
-                    }
+
                     if(c == '\n'){
-                        buffer_len = 0;
-                        printe("> ");
+                        putchar(c);
+                        *ptr = '\0';
+
+                        //pass to lexer here
+
+                        print("> ");
                         prompt_limit = cursor_pos;
-                    }
+
+                        ptr = input_buffer;
+                    } else if (c == '\b') {
+                        if(ptr > input_buffer) {
+                            putchar(c);
+                            ptr--;
+                            *ptr = '\0';
+                        }
+                    } else if (c != 0) {
+                        if(ptr < input_buffer+255){
+                            putchar(c);
+                            *ptr = c;
+                            ptr++;
+                        }
+
+                    } 
 
                 }
             }

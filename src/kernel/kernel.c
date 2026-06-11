@@ -1,7 +1,7 @@
 #include "../libk/include/ktypes.h"
 #include "../libk/include/kmalloc.h"
 #include "boot_info.h"
-#include "shell.h"
+#include "../shell/shell.h"
 
 volatile uint16_t *vga_buffer = (uint16_t *)0xB8000;
 int cursor_pos = 0;
