@@ -2,6 +2,9 @@
 #include "shell.h"
 #include "lexer.h"
 #include "parser.h"
+#include <stddef.h>
+
+#define MAX_ARGS 16
 
 extern uint8_t inb(uint16_t port);
 extern void putchar(char c);
@@ -44,6 +47,12 @@ void launch_shell() {
                         *ptr = '\0';
 
                         //pass to lexer here
+                        char **parsed = lex(input_buffer);
+                        for(int i = 0; parsed[i] != NULL; i++){
+                            print(parsed[i]);
+                            print("\n");
+                        }
+
 
                         print("> ");
                         prompt_limit = cursor_pos;

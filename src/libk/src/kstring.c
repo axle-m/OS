@@ -100,7 +100,6 @@ char *kstrrchr(const char *s, int c)
     return (char *)last;
 }
 
-// check if haystack contains needle
 char *kstrstr(const char *haystack, const char *needle)
 {
     if (!*needle)
@@ -124,7 +123,6 @@ char *kstrstr(const char *haystack, const char *needle)
     return NULL;
 }
 
-// check if s contains any char of reject, return which index of s that char is found first, return length of s if not found?
 size_t kstrcspn(const char *s, const char *reject)
 {
     size_t i = 0;
