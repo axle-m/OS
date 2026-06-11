@@ -1,5 +1,5 @@
-#include "list.h"
-#include "kmalloc.h"
+#include "../../include/util/list.h"
+#include "../../include/kmalloc.h"
 
 typedef struct list_node
 {

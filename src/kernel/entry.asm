@@ -4,6 +4,7 @@ global _start
 extern kmain
 
 _start:
+    push eax     ; boot_info *
     call kmain
     cli
 .halt:

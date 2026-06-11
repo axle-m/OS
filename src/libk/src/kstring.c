@@ -1,7 +1,7 @@
-#include "../include/string.h"
+#include "../include/kstring.h"
 #include "../include/ktypes.h"
 
-size_t strlen(const char *str)
+size_t kstrlen(const char *str)
 {
     size_t ct = 0;
 
@@ -11,7 +11,7 @@ size_t strlen(const char *str)
     return ct;
 }
 
-int strcmp(const char *str1, const char *str2)
+int kstrcmp(const char *str1, const char *str2)
 {
     while (*str1 && *str1 == *str2)
     {
@@ -22,7 +22,7 @@ int strcmp(const char *str1, const char *str2)
     return (unsigned char)*str1 - (unsigned char)*str2;
 }
 
-char *strcpy(char *dest, const char *src)
+char *kstrcpy(char *dest, const char *src)
 {
     char *ret = dest;
 
@@ -32,7 +32,7 @@ char *strcpy(char *dest, const char *src)
     return ret;
 }
 
-char *strncpy(char *dest, const char *src, size_t n)
+char *kstrncpy(char *dest, const char *src, size_t n)
 {
     char *ret = dest;
 
@@ -45,7 +45,7 @@ char *strncpy(char *dest, const char *src, size_t n)
     return ret;
 }
 
-char *strcat(char *dest, const char *src)
+char *kstrcat(char *dest, const char *src)
 {
     char *ret = dest;
 
@@ -57,7 +57,7 @@ char *strcat(char *dest, const char *src)
     return ret;
 }
 
-char *strncat(char *dest, const char *src, size_t n)
+char *kstrncat(char *dest, const char *src, size_t n)
 {
     char *ret = dest;
 
@@ -72,7 +72,7 @@ char *strncat(char *dest, const char *src, size_t n)
     return ret;
 }
 
-char *strchr(const char *s, int c)
+char *kstrchr(const char *s, int c)
 {
     while (*s)
     {
@@ -83,7 +83,7 @@ char *strchr(const char *s, int c)
     return (*s == (char)c) ? (char *)s : NULL;
 }
 
-char *strrchr(const char *s, int c)
+char *kstrrchr(const char *s, int c)
 {
     const char *last = NULL;
 
@@ -100,8 +100,7 @@ char *strrchr(const char *s, int c)
     return (char *)last;
 }
 
-// check if haystack contains needle
-char *strstr(const char *haystack, const char *needle)
+char *kstrstr(const char *haystack, const char *needle)
 {
     if (!*needle)
         return (char *)haystack;
@@ -124,8 +123,7 @@ char *strstr(const char *haystack, const char *needle)
     return NULL;
 }
 
-// check if s contains any char of reject, return which index of s that char is found first, return length of s if not found?
-size_t strcspn(const char *s, const char *reject)
+size_t kstrcspn(const char *s, const char *reject)
 {
     size_t i = 0;
 
@@ -144,7 +142,7 @@ size_t strcspn(const char *s, const char *reject)
     return i;
 }
 
-size_t strspn(const char *s, const char *accept)
+size_t kstrspn(const char *s, const char *accept)
 {
     size_t i = 0;
 
@@ -170,7 +168,7 @@ size_t strspn(const char *s, const char *accept)
     return i;
 }
 
-char *strpbrk(const char *s, const char *accept)
+char *kstrpbrk(const char *s, const char *accept)
 {
     for (; *s; s++)
     {
@@ -187,7 +185,7 @@ char *strpbrk(const char *s, const char *accept)
     return NULL;
 }
 
-char *strtok(char *str, const char *delim)
+char *kstrtok(char *str, const char *delim)
 {
     static char *next;
 
@@ -249,7 +247,7 @@ char *strtok(char *str, const char *delim)
     return token_start;
 }
 
-int strcoll(const char *s1, const char *s2)
+int kstrcoll(const char *s1, const char *s2)
 {
-    return strcmp(s1, s2);
+    return kstrcmp(s1, s2);
 }

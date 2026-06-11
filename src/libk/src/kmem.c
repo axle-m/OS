@@ -1,6 +1,6 @@
-#include "../include/mem.h"
+#include "../include/kmem.h"
 
-void *memset(void *s, int c, size_t n)
+void *kmemset(void *s, int c, size_t n)
 {
     unsigned char *p = s;
 
@@ -10,7 +10,7 @@ void *memset(void *s, int c, size_t n)
     return s;
 }
 
-int memcmp(const void *s1, const void *s2, size_t n)
+int kmemcmp(const void *s1, const void *s2, size_t n)
 {
     const unsigned char *p1 = s1;
     const unsigned char *p2 = s2;
@@ -26,7 +26,7 @@ int memcmp(const void *s1, const void *s2, size_t n)
     return 0;
 }
 
-void *memcpy(void *dest, const void *src, size_t n)
+void *kmemcpy(void *dest, const void *src, size_t n)
 {
     unsigned char *d = dest;
     const unsigned char *s = src;
@@ -37,7 +37,7 @@ void *memcpy(void *dest, const void *src, size_t n)
     return dest;
 }
 
-void *memmove(void *dest, const void *src, size_t n)
+void *kmemmove(void *dest, const void *src, size_t n)
 {
     unsigned char *d = dest;
     const unsigned char *s = src;
@@ -59,7 +59,7 @@ void *memmove(void *dest, const void *src, size_t n)
     return dest;
 }
 
-void *memchr(const void *s, int c, size_t n)
+void *kmemchr(const void *s, int c, size_t n)
 {
     const unsigned char *p = s;
 

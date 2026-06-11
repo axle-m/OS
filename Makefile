@@ -16,7 +16,9 @@ CFLAGS = \
 	-nostdlib \
 	-Wall \
 	-Wextra \
-	-c
+	-c \
+	-MMD \
+	-MP
 
 LDFLAGS = \
 	-m elf_i386 \
@@ -27,11 +29,35 @@ BOOT1_BIN = $(BUILD_DIR)/boot1.bin
 
 ENTRY_OBJ = $(BUILD_DIR)/entry.o
 KERNEL_OBJ = $(BUILD_DIR)/kernel.o
+
 KERNEL_ELF = $(BUILD_DIR)/kernel.elf
 KERNEL_BIN = $(BUILD_DIR)/kernel.bin
 
 DISK_IMAGE = $(BUILD_DIR)/os_floppy.img
 ISO_IMAGE = $(BUILD_DIR)/os.iso
+
+# -------------------------------------------------
+# Recursive libk source discovery
+# -------------------------------------------------
+
+LIBK_DIR := $(SRC_DIR)/libk
+
+LIBK_SRCS := $(shell find $(LIBK_DIR) -name '*.c')
+
+# Mirror directory structure into build/
+LIBK_OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(LIBK_SRCS))
+
+# -------------------------------------------------
+# Recursive shell source discovery
+# -------------------------------------------------
+SHELL_DIR := $(SRC_DIR)/shell
+SHELL_SRCS := $(shell find $(SHELL_DIR) -name '*.c')
+SHELL_OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SHELL_SRCS))
+
+
+# -------------------------------------------------
+# Phony targets
+# -------------------------------------------------
 
 .PHONY: all iso clean run
 
@@ -39,10 +65,16 @@ all: iso
 
 iso: $(ISO_IMAGE)
 
+# -------------------------------------------------
+# Build directory
+# -------------------------------------------------
+
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# bootloader
+# -------------------------------------------------
+# Bootloader
+# -------------------------------------------------
 
 $(BOOT0_BIN): \
 	$(SRC_DIR)/boot/boot0.asm \
@@ -60,36 +92,59 @@ $(BOOT1_BIN): \
 
 	$(ASM) $(ASM_FLAGS) -o $@ $<
 
-# Kernel compilation
+# -------------------------------------------------
+# Kernel objects
+# -------------------------------------------------
 
 $(ENTRY_OBJ): \
 	$(SRC_DIR)/kernel/entry.asm \
 	| $(BUILD_DIR)
 
+	mkdir -p $(dir $@)
 	$(ASM) -f elf32 $< -o $@
 
 $(KERNEL_OBJ): \
 	$(SRC_DIR)/kernel/kernel.c \
 	| $(BUILD_DIR)
 
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $< -o $@
 
+# -------------------------------------------------
+# Generic rule for ALL C files (kernel + libk)
+# -------------------------------------------------
+
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# -------------------------------------------------
 # Link kernel ELF
+# -------------------------------------------------
 
 $(KERNEL_ELF): \
 	$(ENTRY_OBJ) \
 	$(KERNEL_OBJ) \
+	$(LIBK_OBJS) \
+	$(SHELL_OBJS) \
 	$(SRC_DIR)/kernel/linker.ld
 
-	$(LD) $(LDFLAGS) -o $@ $(ENTRY_OBJ) $(KERNEL_OBJ)
+	$(LD) $(LDFLAGS) -o $@ \
+		$(ENTRY_OBJ) \
+		$(KERNEL_OBJ) \
+		$(LIBK_OBJS) \
+		$(SHELL_OBJS)
 
-# Convert ELF -> flat binary
+# -------------------------------------------------
+# ELF → flat binary
+# -------------------------------------------------
 
 $(KERNEL_BIN): $(KERNEL_ELF)
-
 	$(OBJCOPY) -O binary $< $@
 
-# Build floppy image
+# -------------------------------------------------
+# Disk image
+# -------------------------------------------------
 
 $(DISK_IMAGE): \
 	$(BOOT0_BIN) \
@@ -104,14 +159,15 @@ $(DISK_IMAGE): \
 
 	qemu-img resize -f raw $@ 1440k
 
-# Build ISO
+# -------------------------------------------------
+# ISO image
+# -------------------------------------------------
 
 $(ISO_IMAGE): $(DISK_IMAGE)
-
 	mkdir -p $(BUILD_DIR)/iso
 
 	cp $(DISK_IMAGE) \
-	   $(BUILD_DIR)/iso/os_floppy.img
+		$(BUILD_DIR)/iso/os_floppy.img
 
 	xorriso -as mkisofs \
 		-V "OS" \
@@ -120,12 +176,23 @@ $(ISO_IMAGE): $(DISK_IMAGE)
 		-o $@ \
 		$(BUILD_DIR)/iso/
 
-run: $(DISK_IMAGE)
+# -------------------------------------------------
+# Run
+# -------------------------------------------------
 
+run: $(DISK_IMAGE)
 	qemu-system-x86_64 \
 		-drive format=raw,file=$(DISK_IMAGE)
 
+# -------------------------------------------------
+# Clean
+# -------------------------------------------------
+
 clean:
-	@echo off
 	rm -rf $(BUILD_DIR)
 
+# -------------------------------------------------
+# Dependency tracking
+# -------------------------------------------------
+
+-include $(BUILD_DIR)/*.d

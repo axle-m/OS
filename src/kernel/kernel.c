@@ -1,14 +1,13 @@
-#include <stdint.h>
+#include "../libk/include/ktypes.h"
+#include "../libk/include/kmalloc.h"
+#include "boot_info.h"
+#include "../shell/include/shell.h"
+
 volatile uint16_t *vga_buffer = (uint16_t *)0xB8000;
 int cursor_pos = 0;
-int prompt_limit = 0;
 
-const char scancode_to_ascii[] = {
-    0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
-    '\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
-    0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
-    0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
-    '*', 0, ' '};
+extern void launch_shell();
+extern int prompt_limit;
 
 uint8_t inb(uint16_t port)
 {
@@ -26,15 +25,11 @@ void clear_screen()
     cursor_pos = 0;
 }
 
-void print(const char *str);
-
 void putchar(char c)
 {
     if (c == '\n')
     {
         cursor_pos = (cursor_pos / 80 + 1) * 80;
-        print("> ");
-        prompt_limit = cursor_pos;
     }
     else if (c == '\b')
     {
@@ -59,36 +54,23 @@ void print(const char *str)
         putchar(str[i]);
 }
 
-void kmain(void)
+void kmain(boot_info *boot)
 {
+    // set up memory
+    if (boot->magic != BOOT_INFO_MAGIC)
+    {
+        while (1)
+            ;
+    }
+
+    e820_entry *map = boot->memory_map;
+
+    kmalloc_init(
+        boot->heap_start,
+        boot->heap_size);
+
     clear_screen();
     print("Loaded Kernel\n");
 
-    uint8_t last_scancode = 0;
-
-    for (;;)
-    {
-        if (inb(0x64) & 1)
-        {
-            uint8_t scancode = inb(0x60);
-
-            if (scancode < 0x80 && scancode != last_scancode)
-            {
-                if (scancode < sizeof(scancode_to_ascii))
-                {
-                    char c = scancode_to_ascii[scancode];
-                    if (c != 0)
-                    {
-                        putchar(c);
-                    }
-                }
-            }
-
-            last_scancode = scancode;
-        }
-        else
-        {
-            last_scancode = 0;
-        }
-    }
+    launch_shell();
 }
