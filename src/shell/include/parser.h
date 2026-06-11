@@ -4,6 +4,11 @@
 
 #define MAX_ARGS 16
 
+typedef struct {
+    const char *flag;
+    const char *description;
+} flag_t;
+
 typedef struct
 {
     char *name;
@@ -12,7 +17,6 @@ typedef struct
     char *args[MAX_ARGS];
     int arg_count;
 } parsed_command_t;
-
  
 typdef void (*command_func)(parsed_command_t *);
 
@@ -20,6 +24,9 @@ typedef struct {
     const char *name;
     const char *description;
     command_func execute;
+
+    flag_t flags[4]
+    int flag_count;
 } command_t;
  
 

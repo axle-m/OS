@@ -9,17 +9,24 @@ static const command_t dictionary[] = {
     {
         .name = "help",
         .description = "List all available commands and their descriptions",
-        .execute = cmd_help
+        .execute = cmd_help,
+        .flag_count = 0
     },
     {
         .name = "clear",
         .description = "Clear the console input",
-        .execute = cmd_clear
+        .execute = cmd_clear,
+        .flag_count = 0
     },
     {
         .name = "echo",
         .description = "Print out the command arguments",
-        .execute = cmd_echo
+        .execute = cmd_echo,
+        .flag_count = 2,
+        .flags = {
+            { .flag = "-lx", .description = "Print the output of running the argument through the lexer"},
+            { .flag = "-n", .description = "Do not add a trailing newline"}
+        }
     },
 };
 
