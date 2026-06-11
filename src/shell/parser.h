@@ -1,12 +1,13 @@
 #pragma once
 
+#define MAX_ARGS 16
+
 typedef struct {
     char *name;
-    char *flags[8];
+    char *flags[MAX_ARGS];
     int flag_count;
-    char *args[16];
+    char *args[MAX_ARGS];
     int arg_count;
 } parsed_command_t;
 
-// Looks up the command in the dictionary and executes it
-void execute_command(parsed_command_t *cmd);
+void parse(char **lexed, parsed_command_t *out_cmd);
