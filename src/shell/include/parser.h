@@ -1,8 +1,11 @@
 #pragma once
 
+#include "../../libk/include/ktypes.h"
+
 #define MAX_ARGS 16
 
-typedef struct {
+typedef struct
+{
     char *name;
     char *flags[MAX_ARGS];
     int flag_count;

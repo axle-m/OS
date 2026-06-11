@@ -1,7 +1,7 @@
 #include "../libk/include/ktypes.h"
 #include "../libk/include/kmalloc.h"
 #include "boot_info.h"
-#include "../shell/shell.h"
+#include "../shell/include/shell.h"
 
 volatile uint16_t *vga_buffer = (uint16_t *)0xB8000;
 int cursor_pos = 0;
@@ -71,6 +71,18 @@ void kmain(boot_info *boot)
 
     clear_screen();
     print("Loaded Kernel\n");
+
+    char *test1 = kmalloc(sizeof(char));
+    *test1 = 'a';
+    kfree(test1);
+
+    char **test2 = kmalloc(sizeof(char) * 3);
+    kstrcpy(*test2, "bc");
+
+    putchar(*test1);
+    print(*test2);
+
+    print(*test2);
 
     launch_shell();
 }

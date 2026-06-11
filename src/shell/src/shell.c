@@ -1,8 +1,4 @@
-#include <stdint.h>
-#include "shell.h"
-#include "lexer.h"
-#include "parser.h"
-#include <stddef.h>
+#include "../include/shell.h"
 
 #define MAX_ARGS 16
 
@@ -20,11 +16,10 @@ const char scancode_to_ascii[] = {
     0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
     '*', 0, ' '};
 
-
-void launch_shell() {
+void launch_shell()
+{
     char input_buffer[256];
     char *ptr = input_buffer;
-    
 
     uint8_t last_scancode = 0;
 
@@ -42,37 +37,42 @@ void launch_shell() {
                 {
                     char c = scancode_to_ascii[scancode];
 
-                    if(c == '\n'){
+                    if (c == '\n')
+                    {
                         putchar(c);
                         *ptr = '\0';
 
-                        //pass to lexer here
+                        // pass to lexer here
                         char **parsed = lex(input_buffer);
-                        for(int i = 0; parsed[i] != NULL; i++){
+                        for (int i = 0; parsed[i] != NULL; i++)
+                        {
                             print(parsed[i]);
                             print("\n");
                         }
-
 
                         print("> ");
                         prompt_limit = cursor_pos;
 
                         ptr = input_buffer;
-                    } else if (c == '\b') {
-                        if(ptr > input_buffer) {
+                    }
+                    else if (c == '\b')
+                    {
+                        if (ptr > input_buffer)
+                        {
                             putchar(c);
                             ptr--;
                             *ptr = '\0';
                         }
-                    } else if (c != 0) {
-                        if(ptr < input_buffer+255){
+                    }
+                    else if (c != 0)
+                    {
+                        if (ptr < input_buffer + 255)
+                        {
                             putchar(c);
                             *ptr = c;
                             ptr++;
                         }
-
-                    } 
-
+                    }
                 }
             }
 
