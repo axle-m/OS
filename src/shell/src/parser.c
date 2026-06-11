@@ -1,42 +1,30 @@
 #include "../include/parser.h"
 #include "../../libk/include/kstring.h"
-#include <stddef.h>
+#include "../../libk/include/ktypes.h"
+#include "../include/runner.h"
 
-
-extern void cmd_help(parsed_command_t *cmd);
-extern void cmd_clear(parsed_command_t *cmd);
-extern void cmd_echo(parsed_command_t *cmd);
 extern void print(const char *str);
 
 const command_t dictionary[] = {
-    {
-        .name = "help",
-        .description = "List all available commands and their descriptions",
-        .execute = cmd_help,
-        .flag_count = 0
-    },
-    {
-        .name = "clear",
-        .description = "Clear the console input",
-        .execute = cmd_clear,
-        .flag_count = 0
-    },
-    {
-        .name = "echo",
-        .description = "Print out the command arguments",
-        .execute = cmd_echo,
-        .flag_count = 2,
-        .flags = {
-            { .flag = "-lx", .description = "Print the output of running the argument through the lexer"},
-            { .flag = "-n", .description = "Do not add a trailing newline"}
-        }
-    },
+    {.name = "help",
+     .description = "List all available commands and their descriptions",
+     .execute = cmd_help,
+     .flag_count = 0},
+    {.name = "clear",
+     .description = "Clear the console input",
+     .execute = cmd_clear,
+     .flag_count = 0},
+    {.name = "echo",
+     .description = "Print out the command arguments",
+     .execute = cmd_echo,
+     .flag_count = 2,
+     .flags = {
+         {.flag = "-lx", .description = "Print the output of running the argument through the lexer"},
+         {.flag = "-n", .description = "Do not add a trailing newline"}}},
+    {.name = "shutdown", .description = "Exit the kernel and shut down", .execute = cmd_shutdown, .flag_count = 0},
 };
 
-
 const int COMMAND_COUNT = (sizeof(dictionary) / sizeof(dictionary[0]));
-
-
 
 void parse(char **lexed, parsed_command_t *out_cmd)
 {
@@ -65,11 +53,15 @@ void parse(char **lexed, parsed_command_t *out_cmd)
     }
 }
 
-void execute_command(parsed_command_t *cmd){
-    if(cmd->name == NULL) return;
+void execute_command(parsed_command_t *cmd)
+{
+    if (cmd->name == NULL)
+        return;
 
-    for(int i = 0; i < COMMAND_COUNT; i++){
-        if(kstrcmp(cmd->name, dictionary[i].name) == 0){
+    for (int i = 0; i < COMMAND_COUNT; i++)
+    {
+        if (kstrcmp(cmd->name, dictionary[i].name) == 0)
+        {
             dictionary[i].execute(cmd);
             return;
         }

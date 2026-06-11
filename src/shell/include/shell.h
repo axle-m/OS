@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include "lexer.h"
 #include "parser.h"
-#include <stddef.h>
+#include "../../libk/include/ktypes.h"
 
 void launch_shell();
