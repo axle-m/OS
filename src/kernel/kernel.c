@@ -53,12 +53,38 @@ void print(const char *str)
     for (int i = 0; str[i] != '\0'; i++)
         putchar(str[i]);
 }
+static inline void outw(uint16_t port, uint16_t value)
+{
+    __asm__ __volatile__("outw %0, %1"
+                         :
+                         : "a"(value), "Nd"(port));
+}
+
+void shutdown()
+{
+    // QEMU (isa-debug-exit / ACPI poweroff)
+    outw(0x604, 0x2000);
+
+    // Bochs / older QEMU
+    outw(0xB004, 0x2000);
+
+    // VirtualBox
+    outw(0x4004, 0x3400);
+
+    // halt forever in any other case
+    while (1)
+    {
+        __asm__ __volatile__("cli");
+        __asm__ __volatile__("hlt");
+    }
+}
 
 void kmain(boot_info *boot)
 {
     // set up memory
     if (boot->magic != BOOT_INFO_MAGIC)
     {
+        print("Unable to initialize memory");
         while (1)
             ;
     }
