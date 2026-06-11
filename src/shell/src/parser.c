@@ -1,4 +1,7 @@
 #include "../include/parser.h"
+#include <stddef.h>
+#include "parser.h"
+
 
 void parse(char **lexed, parsed_command_t *out_cmd)
 {

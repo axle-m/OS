@@ -43,12 +43,19 @@ void launch_shell()
                         *ptr = '\0';
 
                         // pass to lexer here
-                        char **parsed = lex(input_buffer);
-                        for (int i = 0; parsed[i] != NULL; i++)
-                        {
-                            print(parsed[i]);
-                            print("\n");
-                        }
+                        char **lexed = lex(input_buffer);
+
+                         //print out the lexed array of words
+                         // for(int i = 0; parsed[i] != NULL; i++){
+                        //     print(parsed[i]);
+                        //     print("\n");
+                        // }
+
+                        parsed_command_t cmd;
+                        parse(lexed, &cmd);
+                        
+                        // execute_command(&cmd);
+
 
                         print("> ");
                         prompt_limit = cursor_pos;

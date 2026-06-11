@@ -13,4 +13,14 @@ typedef struct
     int arg_count;
 } parsed_command_t;
 
+ 
+typdef void (*command_func)(parsed_command_t *);
+
+typedef struct {
+    const char *name;
+    const char *description;
+    command_func execute;
+} command_t;
+ 
+
 void parse(char **lexed, parsed_command_t *out_cmd);
