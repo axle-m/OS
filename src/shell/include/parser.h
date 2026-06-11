@@ -28,6 +28,7 @@ typedef struct {
     flag_t flags[4]
     int flag_count;
 } command_t;
- 
+
+extern const commant_t dictionary[];
 
 void parse(char **lexed, parsed_command_t *out_cmd);

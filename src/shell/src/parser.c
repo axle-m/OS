@@ -5,7 +5,7 @@
 extern void cmd_help(parsed_command_t *cmd);
 extern void cmd_clear(parsed_command_t *cmd);
 
-static const command_t dictionary[] = {
+const command_t dictionary[] = {
     {
         .name = "help",
         .description = "List all available commands and their descriptions",
