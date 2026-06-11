@@ -72,17 +72,5 @@ void kmain(boot_info *boot)
     clear_screen();
     print("Loaded Kernel\n");
 
-    char *test1 = kmalloc(sizeof(char));
-    *test1 = 'a';
-    kfree(test1);
-
-    char **test2 = kmalloc(sizeof(char) * 3);
-    kstrcpy(*test2, "bc");
-
-    putchar(*test1);
-    print(*test2);
-
-    print(*test2);
-
     launch_shell();
 }
