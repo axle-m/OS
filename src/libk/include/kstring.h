@@ -46,3 +46,6 @@ char *kstrtok(char *str, const char *delim);
 
 // locale-aware string comparison (implementation-defined behavior)
 int kstrcoll(const char *str1, const char *str2);
+
+// converts an integer to its ascii representation
+char *itoa(uint32_t value, char *str);

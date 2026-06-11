@@ -251,3 +251,32 @@ int kstrcoll(const char *s1, const char *s2)
 {
     return kstrcmp(s1, s2);
 }
+
+char *itoa(uint32_t value, char *str)
+{
+    int i = 0;
+
+    if (value == 0)
+    {
+        str[0] = '0';
+        str[1] = '\0';
+        return str;
+    }
+
+    while (value > 0)
+    {
+        str[i++] = '0' + (value % 10);
+        value /= 10;
+    }
+
+    str[i] = '\0';
+
+    for (int j = 0; j < i / 2; j++)
+    {
+        char t = str[j];
+        str[j] = str[i - j - 1];
+        str[i - j - 1] = t;
+    }
+
+    return str;
+}

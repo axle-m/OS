@@ -1,7 +1,9 @@
 #include "../libk/include/ktypes.h"
 #include "../libk/include/kmalloc.h"
+#include "../libk/include/kstring.h"
 #include "boot_info.h"
 #include "../shell/include/shell.h"
+#include "../libk/include/pmm.h"
 
 volatile uint16_t *vga_buffer = (uint16_t *)0xB8000;
 int cursor_pos = 0;
@@ -79,24 +81,38 @@ void shutdown()
     }
 }
 
+void print_dec(uint32_t value)
+{
+    char buf[11];
+    print(itoa(value, buf));
+}
+
 void kmain(boot_info *boot)
 {
-    // set up memory
     if (boot->magic != BOOT_INFO_MAGIC)
     {
-        print("Unable to initialize memory");
+        print("Invalid boot info\n");
         while (1)
             ;
     }
-
-    e820_entry *map = boot->memory_map;
 
     kmalloc_init(
         boot->heap_start,
         boot->heap_size);
 
+    pmm_init(boot);
+
     clear_screen();
-    print("Loaded Kernel\n");
+
+    print("Kernel loaded\n");
+
+    print("Total pages: ");
+    print_dec(pmm_total_pages());
+
+    print("\nFree pages: ");
+    print_dec(pmm_free_pages());
+
+    print("\n");
 
     launch_shell();
 }
