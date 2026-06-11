@@ -1,9 +1,12 @@
 #include "../include/parser.h"
+#include "../../libk/include/kstring.h"
 #include <stddef.h>
-#include "parser.h"
+
 
 extern void cmd_help(parsed_command_t *cmd);
 extern void cmd_clear(parsed_command_t *cmd);
+extern void cmd_echo(parsed_command_t *cmd);
+extern void print(const char *str);
 
 const command_t dictionary[] = {
     {
@@ -31,7 +34,7 @@ const command_t dictionary[] = {
 };
 
 
-#define COMMAND_COUNT (sizeof(dictionary) / sizeof(dictionary[0]))
+const int COMMAND_COUNT = (sizeof(dictionary) / sizeof(dictionary[0]));
 
 
 

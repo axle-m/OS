@@ -46,15 +46,15 @@ void launch_shell()
                         char **lexed = lex(input_buffer);
 
                          //print out the lexed array of words
-                         // for(int i = 0; parsed[i] != NULL; i++){
-                        //     print(parsed[i]);
+                         // for(int i = 0; lexed[i] != NULL; i++){
+                        //     print(lexed[i]);
                         //     print("\n");
                         // }
 
                         parsed_command_t cmd;
                         parse(lexed, &cmd);
                         
-                        // execute_command(&cmd);
+                        execute_command(&cmd);
 
 
                         print("> ");

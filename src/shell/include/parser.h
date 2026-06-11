@@ -18,17 +18,19 @@ typedef struct
     int arg_count;
 } parsed_command_t;
  
-typdef void (*command_func)(parsed_command_t *);
+typedef void (*command_func)(parsed_command_t *);
 
 typedef struct {
     const char *name;
     const char *description;
     command_func execute;
 
-    flag_t flags[4]
+    flag_t flags[4];
     int flag_count;
 } command_t;
 
-extern const commant_t dictionary[];
+extern const command_t dictionary[];
 
 void parse(char **lexed, parsed_command_t *out_cmd);
+
+void execute_command(parsed_command_t *cmd);
